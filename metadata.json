@@ -1,0 +1,6 @@
+{
+  "name": "German A2 Glossar - Deutsch Vokabeln & Bangla",
+  "description": "Comprehensive German A2 vocabulary learning platform based on the official A2 Glossar with German audio pronunciation, Bengali & English meanings, natural example sentences, and interactive flashcards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

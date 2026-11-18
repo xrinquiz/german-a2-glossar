@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Prevent chrome extension conflicts where extension scripts try to assign window.fetch
+      (function() {
+        try {
+          var _origFetch = window.fetch;
+          Object.defineProperty(window, 'fetch', {
+            get: function() {
+              return _origFetch;
+            },
+            set: function(val) {
+              _origFetch = val;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {}
+
+        // Suppress unhandled errors originating from chrome extensions
+        window.addEventListener('error', function(e) {
+          if (
+            (e.filename && e.filename.indexOf('chrome-extension://') !== -1) ||
+            (e.message && e.message.indexOf('fetch of #<Window>') !== -1)
+          ) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+      })();
+    </script>
+    <title>German A2 Glossar - Deutsch Vokabeln & Bangla</title>
+    <meta name="description" content="Comprehensive German A2 vocabulary learning platform based on the official A2 Glossar with German audio pronunciation, Bengali & English meanings, natural example sentences, and interactive flashcards." />
+    <meta property="og:title" content="German A2 Glossar - Deutsch Vokabeln & Bangla" />
+    <meta property="og:description" content="Comprehensive German A2 vocabulary learning platform based on the official A2 Glossar with German audio pronunciation, Bengali & English meanings, natural example sentences, and interactive flashcards." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
