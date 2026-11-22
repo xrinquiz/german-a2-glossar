@@ -60,8 +60,10 @@ export const saveStoredTheme = (theme: 'light' | 'dark') => {
     localStorage.setItem(THEME_KEY, theme);
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
     }
   } catch (e) {
     // ignore

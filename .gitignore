@@ -6,3 +6,11 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Temporary build scripts and extracts
+*.cjs
+*.ps1
+extracted_*
+test_*
+verify_*
+all_strong_roots.json

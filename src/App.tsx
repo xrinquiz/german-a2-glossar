@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { BookOpen, Sparkles, Layers, GraduationCap, Flame, RotateCcw } from 'lucide-react';
 import { Header } from './components/Header';
 import { DashboardView } from './components/DashboardView';
 import { KapitelOverview } from './components/KapitelOverview';
@@ -6,6 +7,8 @@ import { VocabularyView } from './components/VocabularyView';
 import { FlashcardsView } from './components/FlashcardsView';
 import { LearnModeView } from './components/LearnModeView';
 import { StatisticsView } from './components/StatisticsView';
+import { ConjugationView } from './components/ConjugationView';
+import { ConjugationModal } from './components/ConjugationModal';
 import { VocabularyItem, UserProgressState, LanguageLevel } from './types';
 import a1Raw from './data/a1_vocabulary.json';
 import a2Raw from './data/a2_vocabulary.json';
@@ -20,8 +23,10 @@ import {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'kapitel' | 'vocabulary' | 'flashcards' | 'learn' | 'favorites' | 'practice' | 'stats'
+    'dashboard' | 'kapitel' | 'vocabulary' | 'flashcards' | 'learn' | 'favorites' | 'practice' | 'stats' | 'conjugation'
   >('dashboard');
+  const [modalVerb, setModalVerb] = useState<string | null>(null);
+  const [activeConjugationVerb, setActiveConjugationVerb] = useState<string>('machen');
 
   const [selectedLevel, setSelectedLevel] = useState<LanguageLevel>(() => {
     try {
@@ -35,9 +40,24 @@ export default function App() {
 
   const [selectedKapitel, setSelectedKapitel] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [speechSpeed, setSpeechSpeed] = useState<number>(0.9);
+  const [speechSpeed, setSpeechSpeed] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('german_speech_speed');
+      if (saved) {
+        const val = parseFloat(saved);
+        if (!isNaN(val) && val >= 0.25 && val <= 1.2) return val;
+      }
+    } catch (e) {}
+    return 0.85;
+  });
   const [darkMode, setDarkMode] = useState<boolean>(() => getStoredTheme() === 'dark');
   const [progress, setProgress] = useState<UserProgressState>(getStoredProgress);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('german_speech_speed', speechSpeed.toString());
+    } catch (e) {}
+  }, [speechSpeed]);
 
   const a1Vocabulary = a1Raw as VocabularyItem[];
   const a2Vocabulary = a2Raw as VocabularyItem[];
@@ -70,6 +90,13 @@ export default function App() {
   // Sync theme changes with DOM and localStorage
   useEffect(() => {
     saveStoredTheme(darkMode ? 'dark' : 'light');
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
   }, [darkMode]);
 
   // Sync progress changes to localStorage
@@ -187,7 +214,7 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors font-sans antialiased flex flex-col`}>
+    <div className={`min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors font-sans antialiased flex flex-col ${darkMode ? 'dark' : ''}`}>
       {/* Navigation Header */}
       <Header
         activeTab={activeTab}
@@ -212,7 +239,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 md:pb-12">
         {activeTab === 'dashboard' && (
           <DashboardView
             vocabulary={activeVocabulary}
@@ -260,6 +287,7 @@ export default function App() {
             selectedLevel={selectedLevel}
             setSelectedLevel={handleLevelChange}
             chapters={activeChapters}
+            onOpenConjugation={(v) => setModalVerb(v)}
           />
         )}
 
@@ -320,6 +348,7 @@ export default function App() {
               speechSpeed={speechSpeed}
               selectedLevel="all"
               chapters={getChaptersByLevel('all')}
+              onOpenConjugation={(v) => setModalVerb(v)}
             />
           </div>
         )}
@@ -349,8 +378,16 @@ export default function App() {
               speechSpeed={speechSpeed}
               selectedLevel="all"
               chapters={getChaptersByLevel('all')}
+              onOpenConjugation={(v) => setModalVerb(v)}
             />
           </div>
+        )}
+
+        {activeTab === 'conjugation' && (
+          <ConjugationView
+            initialVerb={activeConjugationVerb}
+            speechSpeed={speechSpeed}
+          />
         )}
 
         {activeTab === 'stats' && (
@@ -365,6 +402,19 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Pop-up Conjugation Modal */}
+      {modalVerb && (
+        <ConjugationModal
+          verb={modalVerb}
+          onClose={() => setModalVerb(null)}
+          onGoToConjugationTab={(v) => {
+            setActiveConjugationVerb(v);
+            setActiveTab('conjugation');
+          }}
+          speechSpeed={speechSpeed}
+        />
+      )}
 
       {/* Footer */}
       <footer className="mt-12 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
@@ -383,6 +433,74 @@ export default function App() {
           </div>
         </div>
       </footer>
+      {/* Mobile Bottom Navigation Dock (Phones & Small Tablets < 768px) */}
+      <nav
+        aria-label="Mobile Navigation Dock"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 shadow-xl px-2 py-1.5 flex items-center justify-around text-[10px] font-bold"
+        style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
+      >
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all ${
+            activeTab === 'dashboard'
+              ? 'text-red-600 dark:text-red-400 font-black scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" />
+          <span>ড্যাশবোর্ড</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('vocabulary')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all ${
+            activeTab === 'vocabulary'
+              ? 'text-red-600 dark:text-red-400 font-black scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>শব্দভাণ্ডার</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('conjugation')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all relative ${
+            activeTab === 'conjugation'
+              ? 'text-red-600 dark:text-red-400 font-black scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <div className={`p-1 rounded-lg text-white shadow-xs transition-colors ${activeTab === 'conjugation' ? 'bg-red-600 ring-2 ring-red-400/30' : 'bg-slate-700 dark:bg-slate-700'}`}>
+            <Layers className="w-3.5 h-3.5" />
+          </div>
+          <span>ভার্ব</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('flashcards')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all ${
+            activeTab === 'flashcards'
+              ? 'text-red-600 dark:text-red-400 font-black scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>কার্ড</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('learn')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all ${
+            activeTab === 'learn'
+              ? 'text-red-600 dark:text-red-400 font-black scale-105'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <GraduationCap className="w-4 h-4" />
+          <span>লার্ন মোড</span>
+        </button>
+      </nav>
     </div>
   );
 }

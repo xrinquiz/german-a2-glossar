@@ -23,6 +23,7 @@ interface VocabularyViewProps {
   selectedLevel?: LanguageLevel;
   setSelectedLevel?: (lvl: LanguageLevel) => void;
   chapters?: ChapterInfo[];
+  onOpenConjugation?: (verb: string) => void;
 }
 
 export const VocabularyView: React.FC<VocabularyViewProps> = ({
@@ -40,7 +41,8 @@ export const VocabularyView: React.FC<VocabularyViewProps> = ({
   speechSpeed,
   selectedLevel,
   setSelectedLevel,
-  chapters
+  chapters,
+  onOpenConjugation
 }) => {
   const [selectedPos, setSelectedPos] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<LearningStatus>('all');
@@ -473,7 +475,7 @@ export const VocabularyView: React.FC<VocabularyViewProps> = ({
           </button>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
           {paginatedItems.map((item) => (
             <VocabularyCard
               key={item.id}
@@ -486,6 +488,7 @@ export const VocabularyView: React.FC<VocabularyViewProps> = ({
               onToggleFavorite={onToggleFavorite}
               speechSpeed={speechSpeed}
               searchQuery={searchQuery}
+              onOpenConjugation={onOpenConjugation}
             />
           ))}
         </div>
@@ -541,9 +544,23 @@ export const VocabularyView: React.FC<VocabularyViewProps> = ({
                             <Volume2 className="w-4 h-4" />
                           </button>
                           <div>
-                            <span className="font-bold text-slate-900 dark:text-white">
-                              <HighlightText text={item.german || item.word} query={searchQuery} />
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-slate-900 dark:text-white">
+                                <HighlightText text={item.german || item.word} query={searchQuery} />
+                              </span>
+                              {(item.partOfSpeech === 'Verb' || item.verbForms) && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOpenConjugation?.(item.word || item.german);
+                                  }}
+                                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 hover:bg-amber-200"
+                                  title="Konjugation"
+                                >
+                                  Konjugation
+                                </button>
+                              )}
+                            </div>
                             {item.plural && item.plural !== '—' && (
                               <p className="text-xs text-slate-500 dark:text-slate-400">
                                 Pl: <HighlightText text={item.plural} query={searchQuery} />

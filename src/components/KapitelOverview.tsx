@@ -92,7 +92,7 @@ export const KapitelOverview: React.FC<KapitelOverviewProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
         {chapters.map((ch) => {
           const chapterWords = vocabulary.filter(
             (w) => w.kapitel === ch.id && (selectedLevel === 'all' ? w.level === ch.level : true)

@@ -14,6 +14,7 @@ interface VocabularyCardProps {
   onToggleFavorite: (id: number) => void;
   speechSpeed: number;
   searchQuery?: string;
+  onOpenConjugation?: (verb: string) => void;
 }
 
 export const VocabularyCard: React.FC<VocabularyCardProps> = ({
@@ -25,7 +26,8 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({
   onTogglePractice,
   onToggleFavorite,
   speechSpeed,
-  searchQuery
+  searchQuery,
+  onOpenConjugation
 }) => {
   const [isPlayingWord, setIsPlayingWord] = useState(false);
   const [isPlayingSentence, setIsPlayingSentence] = useState(false);
@@ -166,19 +168,36 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({
           {getArticleBadge()}
         </div>
 
-        {/* Independent Listen Button */}
-        <button
-          onClick={handlePlayWord}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
-            isPlayingWord
-              ? 'bg-red-600 text-white animate-pulse'
-              : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-900/60'
-          }`}
-          title="Listen to German pronunciation"
-        >
-          <Volume2 className="w-4 h-4" />
-          <span>{isPlayingWord ? 'Hören...' : 'Listen'}</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Konjugation button for verbs */}
+          {(item.partOfSpeech === 'Verb' || (item.verbForms && item.verbForms !== '—')) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenConjugation?.(item.word || item.german);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-900/60 border border-amber-300/60 dark:border-amber-700/60 transition-all shadow-sm"
+              title="Konjugation anzeigen (ক্রিয়ার রূপান্তর দেখুন)"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Konjugation</span>
+            </button>
+          )}
+
+          {/* Independent Listen Button */}
+          <button
+            onClick={handlePlayWord}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+              isPlayingWord
+                ? 'bg-red-600 text-white animate-pulse'
+                : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-900/60'
+            }`}
+            title="Listen to German pronunciation"
+          >
+            <Volume2 className="w-4 h-4" />
+            <span>{isPlayingWord ? 'Hören...' : 'Listen'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Plural / Verb forms */}
